@@ -77,3 +77,86 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def unify_var(var, x, theta):
+    """
+    Unify variable with term x under substitution theta.
+    """
+    if var in theta:
+        return unify(theta[var], x, theta)
+    elif x in theta:
+        return unify(var, theta[x], theta)
+    else:
+        theta[var] = x
+        return theta
+
+def unify(x, y, theta):
+    """
+    Unify two terms x and y under substitution theta.
+    """
+    if theta is None:
+        return None
+    elif x == y:
+        return theta
+    elif isinstance(x, str) and x.islower():
+        return unify_var(x, y, theta)
+    elif isinstance(y, str) and y.islower():
+        return unify_var(y, x, theta)
+    elif isinstance(x, list) and isinstance(y, list):
+        if len(x) != len(y):
+            return None
+        for xi, yi in zip(x, y):
+            theta = unify(xi, yi, theta)
+        return theta
+    else:
+        return None
+
+def negate_formula(formula):
+    """
+    Negate a logical formula.
+    """
+    if formula[0] == '~':
+        return formula[1:]
+    else:
+        return '~' + formula
+
+def resolve(clause1, clause2):
+    """
+    Resolve two clauses.
+    """
+    resolved = True
+    resolved_statement = ""
+
+    for statement1 in clause1:
+        negated_statement1 = negate_formula(statement1)
+        if negated_statement1 in clause2:
+            resolved = True
+            resolved_statement = f"{clause1} and {clause2} resolved by {statement1} and {negated_statement1}"
+            break
+
+    return resolved, resolved_statement
+
+# Example usage:
+statement1 = ['I am hungry']
+statement2 = ['I am not hungry']
+statement3 = ['I ate a sandwich']
+
+# Resolve statement 1 and statement 2
+resolved, resolved_statement = resolve(statement1, statement2)
+
+# Resolve result of statement 1 and 2 with statement 3
+if not resolved:
+    resolved1, resolved_statement1 = resolve(statement1 + statement3, statement2)
+    resolved2, resolved_statement2 = resolve(statement1, statement2 + statement3)
+    resolved3, resolved_statement3 = resolve(statement1 + statement3, statement2 + statement3)
+    resolved = resolved1 or resolved2 or resolved3
+    resolved_statement = resolved_statement1 if resolved1 else resolved_statement2 if resolved2 else resolved_statement3
+
+# Output
+print("Statements:")
+print("Statement 1:", statement1)
+print("Statement 2:", statement2)
+print("Statement 3:", statement3)
+
+print("Resolved:", resolved)
